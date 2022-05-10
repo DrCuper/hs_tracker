@@ -1,0 +1,7 @@
+bs4
+sqlalchemy == 1.3.8
+fastapi
+requests
+uvicorn
+pydantic
+psycopg2-binary

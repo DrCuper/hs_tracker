@@ -1,0 +1,4 @@
+pyTelegramBotAPI
+cx_Oracle
+aiohttp
+pygtail
