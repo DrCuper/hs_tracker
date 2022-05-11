@@ -58,3 +58,4 @@ services:
       TZ: Europe/Moscow
     ports:
       - "8443:8443"
+

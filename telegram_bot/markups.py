@@ -3,7 +3,7 @@ import telebot
 def markup_layout():
 
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    item1 = telebot.types.KeyboardButton("Добавить данные по местам в БГ")
+    item1 = telebot.types.KeyboardButton("Личная статистика")
     item2 = telebot.types.KeyboardButton("Удалить запись")
     item3 = telebot.types.KeyboardButton("Последние 10 игр")
     item4 = telebot.types.KeyboardButton("Рейтинги")
@@ -13,6 +13,46 @@ def markup_layout():
     markup.row(item5, item4)
     markup.row(item2, item3)
     markup.row(item6)
+    return markup
+
+
+def personal_layout():
+
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+    item1 = telebot.types.KeyboardButton("Среднее место по патчам")
+    item2 = telebot.types.KeyboardButton("Итоговых мест")
+
+    markup.row(item1)
+    markup.row(item2)
+    markup.row(telebot.types.KeyboardButton("Назад"))
+
+    return markup
+
+
+def choose_layout():
+
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+    markup.row(telebot.types.KeyboardButton("Общий"))
+    markup.row(telebot.types.KeyboardButton("Текущий"))
+    markup.row(telebot.types.KeyboardButton("Устаревший"))
+
+    markup.row(telebot.types.KeyboardButton("Назад"))
+
+    return markup
+
+
+def choose_old_layout(patches):
+
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+    for patch in patches:
+
+        markup.row(telebot.types.KeyboardButton(patch))
+
+    markup.row(telebot.types.KeyboardButton("Назад"))
+
     return markup
 
 

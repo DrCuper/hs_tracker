@@ -57,6 +57,7 @@ class players(base):
 
     id_player = Column('id_player', Integer(), primary_key=True)
     v_name = Column('v_name', Text())
+    b_deleted = Column('b_deleted', Integer(), default=0)
 
     __table_args__ = TABLE_ARGS
 
@@ -98,6 +99,22 @@ def update_bg_version_to_actual():
             actual_bg_version = version
 
 #update_bg_version_to_actual()
+
+
+@app.get("/all_players")
+async def all_players(id_player: int):
+    Session = sessionmaker(engine)   
+    session = Session()
+
+    result = (session.query(players).
+                      filter(players.b_deleted==0).
+                      filter(players.id_player!=id_player).
+                      all()
+                      )
+
+    session.close()
+
+    return result
 
 
 @app.post("/add_place")
@@ -301,12 +318,12 @@ async def total_avg_user_per_version(id_player: int):
     session = Session()
 
     result = ( session.query(players.v_name, salesmen.bg_version, func.avg(salesmen.place).label('avg')).
-                       join(players, players.id_player==salesmen.id_player).
-                       filter(salesmen.b_deleted==0).
-                       filter(salesmen.id_player==id_player).
-                       group_by(players.v_name).
-                       all()
-                       )
+                    join(players, players.id_player==salesmen.id_player).
+                    filter(salesmen.b_deleted==0).
+                    filter(salesmen.id_player==id_player).
+                    group_by(players.v_name, salesmen.bg_version).
+                    all()
+                    )
 
     session.close()
 
@@ -331,6 +348,25 @@ async def total_avg_per_version():
     return result
 
 
+@app.get("/total_avg_per_special_version")
+async def total_avg_per_special_version(version: str):
+
+    Session = sessionmaker(engine)
+    session = Session()
+
+    result = ( session.query(players.v_name, salesmen.bg_version, func.avg(salesmen.place).label('avg')).
+                       join(players, players.id_player==salesmen.id_player).
+                       filter(salesmen.b_deleted==0).
+                       filter(salesmen.bg_version==version).
+                       group_by(players.v_name, salesmen.bg_version).
+                       all()
+                       )
+
+    session.close()
+
+    return result
+
+
 @app.get("/total_period")
 async def total_period(place: int):
     
@@ -344,7 +380,7 @@ async def total_period(place: int):
                        subquery()
                        )
 
-    result = ( session.query(players.v_name, (cast(func.count(salesmen.place), Float(2,2)) / subresult.c.cnt).label('count')).
+    result = ( session.query(players.v_name, (cast(func.count(salesmen.place), Float()) / subresult.c.cnt).label('count')).
                        select_from(subresult).
                        join(players, players.id_player==subresult.c.id_player).
                        join(salesmen, salesmen.id_player==subresult.c.id_player).
@@ -375,6 +411,23 @@ async def total_games():
 
     return result
 
+@app.get("/total_games_user_per_place")
+async def total_games_user_per_place(id_player: int):
+
+    Session = sessionmaker(engine)
+    session = Session()
+
+    result = ( session.query(salesmen.place, func.count(salesmen.place).label('count')).
+                       filter(salesmen.b_deleted==0).
+                       filter(salesmen.id_player==id_player).
+                       group_by(salesmen.place).
+                       all()
+                       )
+
+    session.close()
+
+    return result
+
 @app.get("/bg_version")
 async def bg_version():
 
@@ -394,6 +447,23 @@ async def bg_version():
     return { 'version': version}
 
 
+@app.get("/bg_version_bd")
+async def bg_version_bd():
+
+    Session = sessionmaker(engine)
+    session = Session()
+
+    result = ( session.query(salesmen.bg_version).
+                       order_by(salesmen.bg_version.desc()).
+                       distinct().
+                       first()
+    )
+
+    session.close()
+
+    return result
+
+
 @app.get("/bg_version_all")
 async def bg_version_all():
 
@@ -401,6 +471,23 @@ async def bg_version_all():
     session = Session()
 
     result = ( session.query(salesmen.bg_version).
+                       distinct().
+                       all()
+    )
+
+    session.close()
+
+    return result
+
+
+@app.get("/bg_version_old")
+async def bg_version_old():
+
+    Session = sessionmaker(engine)
+    session = Session()
+
+    result = ( session.query(salesmen.bg_version).
+                       filter(salesmen.bg_version!=str(actual_bg_version)).
                        distinct().
                        all()
     )
@@ -481,5 +568,3 @@ def make_all_ids_normal():
 
         session.commit()
         session.close() 
-
-make_all_ids_normal()

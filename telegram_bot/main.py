@@ -8,6 +8,7 @@ import ssl
 import telebot
 import json
 import requests
+import random
 
 import markups
 
@@ -30,6 +31,14 @@ WEBHOOK_SSL_PRIV = 'webhook_pkey.pem'
 
 WEBHOOK_URL_BASE = f"https://{WEBHOOK_HOST}:{WEBHOOK_PORT}"
 WEBHOOK_URL_PATH = f"/{API_TOKEN}/"
+
+bad_words_user = [
+    'Жаль что твоя мать это не увидела',
+    'С таким столом можно и без семьи жить',
+    'Не знал, что в даркнете у вас есть карта постоянного клиента на продажу родственников',
+    'Зато можете не думать о подарках родственникам',
+    'Опять ты включил свой 3D-принтер'
+]
 
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
@@ -156,10 +165,10 @@ def answer(message):
 
             add_place(message)
             
-        elif message.text == "Добавить данные по местам в БГ":
+        elif message.text == "Личная статистика":
 
-            msg = bot.reply_to(message, "Выберете ваше место", reply_markup= markups.bg_markup_layout())
-            bot.register_next_step_handler(msg, hs_bg_places)
+            msg = bot.reply_to(message, "Выберете статистику", reply_markup= markups.personal_layout())
+            bot.register_next_step_handler(msg, personal_stats)
 
         elif message.text == "Еженедельная сводка":
 
@@ -198,6 +207,41 @@ def answer(message):
         logger.error(e)
 
 
+def personal_stats(message):
+
+    try:
+
+        if message.text == "Среднее место по патчам":
+
+            response = sorted(json.loads(requests.request("GET", f'{API_URL}/total_avg_user_per_version?id_player={message.chat.id}').text),
+                                   key=lambda d: d['bg_version'], reverse=True)
+
+            for line in response:
+
+                bot.send_message(message.chat.id, f"Ваш средний рейтинг за патч {line.get('bg_version')} - {format(line.get('avg'), '.2f')}", reply_markup = markups.markup_layout())
+
+        elif message.text == "Итоговых мест":
+
+            response = sorted(json.loads(requests.request("GET", f'{API_URL}/total_games_user_per_place?id_player={message.chat.id}').text),
+                                   key=lambda d: d['place'], reverse=False)
+
+            for line in response:
+
+                bot.send_message(message.chat.id, f"Топ-{line.get('place')} - {line.get('count')} раз", reply_markup = markups.markup_layout())
+      
+        
+        elif message.text == "Назад":
+            bot.send_message(message.chat.id, "Главное меню", reply_markup = markups.markup_layout())
+
+        else:
+            bot.send_message(message.chat.id, "Wrong value",
+                             reply_markup = markups.markup_layout())
+
+    except Exception as e:
+
+        bot.reply_to(message, 'oooops')
+        logger.error(e)   
+
 def test(message):
 
     try:
@@ -215,8 +259,13 @@ def test(message):
 def others(message):
 
     try:
+        
+        if message.text == "Назад":
+            bot.send_message(message.chat.id, "Главное меню", reply_markup = markups.markup_layout())
 
-        pass
+        else:
+            bot.send_message(message.chat.id, "Wrong value",
+                             reply_markup = markups.markup_layout())
 
     except Exception as e:
 
@@ -252,24 +301,32 @@ def add_place(message):
 
             if message.text in ('1', '8'):
 
-                curs1 = conn.cursor()
-                curs1.execute(f"select * from players where id_player not like '{message.chat.id}'")
-                all_players = curs1.fetchall()
-                
-                for line in all_players:
+                response = json.loads(requests.request("GET", f'{API_URL}/all_players?id_player={message.chat.id}').text)
 
-                    if message.text == '1':
+                if message.text == '1':
 
-                        bot.send_message(line[0],
-                                     f"Внимание, {line[1]} ! {message.from_user.first_name} занял первое место !")
+                    for line in response:
+
+                        bad_words_other = [
+                            f'Жаль, что мать {message.from_user.first_name} не увидела его победы',                                                
+                            f'C таким столом, как у {message.from_user.first_name}, можно и без семьи жить',                                                 
+                            f'Никто не знал, что у {message.from_user.first_name} в даркнете есть карта постоянного клиента на продажу родственников',
+                            f'Зато {message.from_user.first_name} может не думать о подарках родственникам',                             
+                            f'{message.from_user.first_name} в очередной раз включил свой 3D-принтер'
+                        ]
+
+                        bot.send_message(line.get('id_player'), random.choice(bad_words_other))
+
+                    bot.send_message(message.chat.id, random.choice(bad_words_user))
                     
-                    elif message.text == '8':
+                elif message.text == '8':
 
-                        bot.send_message(line[0], f"Какая жалость, {message.from_user.first_name} занял топ-8 !")
+                    bot.send_message(line[0], f"Какая жалость, {message.from_user.first_name} занял топ-8 !")
+
 
             avg_place = json.loads(requests.request("GET", f'{API_URL}/total_avg_user?id_player={message.chat.id}', headers=headers, data=payload).text)
 
-            bot.send_message(message.chat.id, f"Ваше среднее место - {format(avg_place[0].get('avg'), '.3f')}",
+            bot.send_message(message.chat.id, f"Ваше среднее место - {format(avg_place[0].get('avg'), '.2f')}",
                              reply_markup = markups.markup_layout())
 
         elif message.text == "Назад":
@@ -347,7 +404,7 @@ def last_ten_games(message):
 
             response = json.loads(requests.request("GET", f'{API_URL}/ten_last_avg?id_player={message.chat.id}').text)
 
-            bot.send_message(message.chat.id, f"Ваш средний рейтинг за последние 10 игр - {format(response[0].get('avg'), '.3f')}", reply_markup = markups.markup_layout())
+            bot.send_message(message.chat.id, f"Ваш средний рейтинг за последние 10 игр - {format(response[0].get('avg'), '.2f')}", reply_markup = markups.markup_layout())
 
         elif message.text == "Назад":
 
@@ -362,6 +419,92 @@ def last_ten_games(message):
 
         bot.reply_to(message, 'oooops')
         logger.error(e)
+
+patches = []
+
+def avg_rating(message):
+
+    try:
+
+        if message.text == "Общий":
+
+            response = sorted(json.loads(requests.request("GET", f'{API_URL}/total_avg').text),
+                                    key=lambda d: d['avg'], reverse=False)
+
+            line = f"Лидер по среднему рейтингу - {response[0].get('v_name')}, со средним местом - {format(response[0].get('avg'), '.2f')}"
+
+            cnt = 0
+
+            for person in response:
+
+                cnt = cnt + 1
+
+                if person.get('v_name') == response[0].get('v_name'): 
+                    continue
+
+                line = line + f"\n{cnt}. {person.get('v_name')}, со средним местом - {format(person.get('avg'), '.2f')}"
+
+            bot.send_message(message.chat.id, line, reply_markup = markups.markup_layout())
+
+        elif message.text == "Текущий":
+
+            bg_version = json.loads(requests.request("GET", f'{API_URL}/bg_version_bd').text).get('bg_version')
+            
+            response = sorted(json.loads(requests.request("GET", f'{API_URL}/total_avg_per_special_version?version={bg_version}').text),
+                    key=lambda d: d['avg'], reverse=False)
+
+            line = f"Лидер по среднему рейтинга текущего патча - {response[0].get('v_name')}, со средним местом - {format(response[0].get('avg'), '.2f')}"
+
+            cnt = 0
+
+            for person in response:
+
+                cnt = cnt + 1
+
+                if person.get('v_name') == response[0].get('v_name'): 
+                    continue
+
+                line = line + f"\n{cnt}. {person.get('v_name')}, со средним местом - {format(person.get('avg'), '.2f')}"
+
+            bot.send_message(message.chat.id, line, reply_markup = markups.markup_layout())
+        
+        elif message.text == "Устаревший":
+
+            response = sorted(json.loads(requests.request("GET", f'{API_URL}/bg_version_old').text),
+                                    key=lambda d: d['bg_version'], reverse=True)
+
+            for line in response:
+
+                patches.append(line.get('bg_version'))
+
+            msg = bot.reply_to(message, "Выберете интересующий вас устаревший патч", reply_markup = markups.choose_old_layout(patches))
+            bot.register_next_step_handler(msg, avg_rating)  
+
+        elif message.text in patches:
+
+            response = sorted(json.loads(requests.request("GET", f'{API_URL}/total_avg_per_special_version?version={message.text}').text),
+                    key=lambda d: d['avg'], reverse=False)
+
+            line = f"Лидер по среднему рейтинга патча {response[0].get('bg_version')} - {response[0].get('v_name')}, со средним местом - {format(response[0].get('avg'), '.2f')}"
+
+            cnt = 0
+
+            for person in response:
+
+                cnt = cnt + 1
+
+                if person.get('v_name') == response[0].get('v_name'): 
+                    continue
+
+                line = line + f"\n{cnt}. {person.get('v_name')}, со средним местом - {format(person.get('avg'), '.2f')}"
+
+            bot.send_message(message.chat.id, line, reply_markup = markups.markup_layout())
+
+    except Exception as e:
+
+        bot.reply_to(message, 'oooops')
+        logger.error(e)
+
 
 def weekly_agenda(message):
 
@@ -387,7 +530,7 @@ def weekly_agenda(message):
             response = sorted(json.loads(requests.request("GET", f'{API_URL}/weekly_avg').text),
                                     key=lambda d: d['avg'])
 
-            bot.send_message(message.chat.id, f"Лидер по среднему рейтинга - {response[0].get('v_name')}, со средним местом - {format(response[0].get('avg'), '.3f')}", reply_markup = markups.markup_layout())    
+            bot.send_message(message.chat.id, f"Лидер по среднему рейтинга - {response[0].get('v_name')}, со средним местом - {format(response[0].get('avg'), '.2f')}", reply_markup = markups.markup_layout())    
 
             cnt = 0
 
@@ -398,7 +541,7 @@ def weekly_agenda(message):
                 if line.get('v_name') == response[0].get('v_name'):
                     continue
            
-                bot.send_message(message.chat.id, f"{cnt}. {line.get('v_name')}, среднее место - {format(line.get('avg'), '.3f')}")
+                bot.send_message(message.chat.id, f"{cnt}. {line.get('v_name')}, среднее место - {format(line.get('avg'), '.2f')}")
 
         elif message.text == "По количеству игр":
 
@@ -460,23 +603,8 @@ def bg_rating(message):
 
         elif message.text == 'По среднему рейтингу':
 
-            response = sorted(json.loads(requests.request("GET", f'{API_URL}/total_avg').text),
-                                    key=lambda d: d['avg'], reverse=True)
-
-            line = f"Лидер по среднему рейтинга - {response[0].get('v_name')}, со средним местом - {format(response[0].get('avg'), '.3f')}"
-
-            cnt = 0
-
-            for person in response:
-
-                cnt = cnt + 1
-
-                if person.get('v_name') == response[0].get('v_name'): 
-                    continue
-
-                line = line + f"\n{cnt}. {person.get('v_name')}, со средним местом - {format(person.get('avg'), '.3f')}"
-
-            bot.send_message(message.chat.id, line, reply_markup = markups.markup_layout())
+            msg = bot.reply_to(message, "Выберете интересующий вас патч", reply_markup = markups.choose_layout())
+            bot.register_next_step_handler(msg, avg_rating)       
 
         elif message.text == 'По периодичности места':
 
@@ -533,11 +661,11 @@ def bg_period_rating(message):
 
     try:
 
-        response = sorted(json.loads(requests.request("GET", f'{API_URL}/total_top_place?place={message.text}').text),
-                                    key=lambda d: d['count'], reverse=True)
+        response = sorted(json.loads(requests.request("GET", f'{API_URL}/total_period?place={message.text}').text),
+                                    key=lambda d: d['count'])
             
         bot.send_message(message.chat.id,
-                        f"Лидер рейтинга по топ-{message.text} - {response[0].get('v_name')}, занял топ-{message.text} - {response[0].get('count')}", reply_markup = markups.markup_layout())
+                        f"Лидер рейтинга периодичности топ-{message.text} - {response[0].get('v_name')}, с топ-{message.text} каждую {format(response[0].get('count'), '.2f')} игру", reply_markup = markups.markup_layout())
 
         cnt = 0
 
@@ -549,7 +677,7 @@ def bg_period_rating(message):
 
                 continue
 
-            bot.send_message(message.chat.id, f"{cnt}. {line.get('v_name')}, с топ-{message.text} каждую {line.get('count')} игру")
+            bot.send_message(message.chat.id, f"{cnt}. {line.get('v_name')}, с топ-{message.text} каждую {format(line.get('count'), '.2f')} игру")
 
     except:
         bot.reply_to(message, 'oooops')
