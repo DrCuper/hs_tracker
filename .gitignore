@@ -137,3 +137,6 @@ dmypy.json
 
 pgdata/
 api_server/core
+*/__pycache__
+launch_
+*/logs/
