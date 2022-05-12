@@ -71,7 +71,7 @@ def commands(message):
 
         if message.chat.id not in players:
 
-            requests.request("GET", f'{API_URL}/add_player?name={message.from_user.first_name}&id_player={message.chat.id}'):
+            requests.request("GET", f'{API_URL}/add_player?name={message.from_user.first_name}&id_player={message.chat.id}')
 
         if message.text.split(' ')[0] == '/random':
 
