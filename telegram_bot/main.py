@@ -500,6 +500,8 @@ def avg_rating(message):
 
             bot.send_message(message.chat.id, line, reply_markup = markups.markup_layout())
 
+            patches.clear()
+
     except Exception as e:
 
         bot.reply_to(message, 'oooops')
@@ -734,7 +736,7 @@ logger.info("Launched !")
 web.run_app(
     app,
     host=WEBHOOK_LISTEN,
-    port=WEBHOOK_PORT,
+    port=8443,
     ssl_context=context,
 )
 

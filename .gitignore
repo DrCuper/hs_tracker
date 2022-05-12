@@ -140,3 +140,4 @@ api_server/core
 */__pycache__
 launch_
 */logs/
+telegram_bot/*.pem
