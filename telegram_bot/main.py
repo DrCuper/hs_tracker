@@ -58,10 +58,20 @@ async def handle(request):
 
 app.router.add_post('/{token}/', handle)
 
+players = []
+
+for line in json.loads(requests.request("GET", f'{API_URL}/total_avg_user_per_version?id_player={message.chat.id}').text):
+
+    players.append(line.get('id_player'))
+
 @bot.message_handler(commands=['start', 'random', 'test'])
 def commands(message):
     """Answer to commands"""
     try:
+
+        if message.chat.id not in players:
+
+            requests.request("GET", f'{API_URL}/add_player?name={message.from_user.first_name}&id_player={message.chat.id}'):
 
         if message.text.split(' ')[0] == '/random':
 
