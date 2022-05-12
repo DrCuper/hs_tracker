@@ -101,7 +101,7 @@ def update_bg_version_to_actual():
 #update_bg_version_to_actual()
 
 @app.get('/add_player')
-asycn def add_player(name: str, id_player: int):
+async def add_player(name: str, id_player: int):
 
     Session = sessionmaker(engine)
     session = Session()
