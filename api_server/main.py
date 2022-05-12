@@ -120,7 +120,22 @@ async def add_player(name: str, id_player: int):
 
 
 @app.get("/all_players")
-async def all_players(id_player: int):
+async def all_players():
+
+    Session = sessionmaker(engine)   
+    session = Session()
+
+    result = (session.query(players).
+                      all()
+                      )
+
+    session.close()
+
+    return result
+
+
+@app.get("/all_players_except_one")
+async def all_players_except_one(id_player: int):
 
     Session = sessionmaker(engine)   
     session = Session()
