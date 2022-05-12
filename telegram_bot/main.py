@@ -301,7 +301,7 @@ def add_place(message):
 
             if message.text in ('1', '8'):
 
-                response = json.loads(requests.request("GET", f'{API_URL}/all_players?id_player={message.chat.id}').text)
+                response = json.loads(requests.request("GET", f'{API_URL}/all_players_except_one?id_player={message.chat.id}').text)
 
                 if message.text == '1':
 

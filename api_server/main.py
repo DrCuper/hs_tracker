@@ -106,9 +106,16 @@ async def add_player(name: str, id_player: int):
     Session = sessionmaker(engine)
     session = Session()
 
-    session.add(players(id_player = id_player,
-                        v_name = name
-    ))
+    if session.query(players).
+                      filter(players.id_player == id_player).
+                      filter(players.v_name == name).
+                      count() == 0:
+
+        session.add(players(id_player = id_player,
+                            v_name = name
+        ))
+
+        session.commit()
 
     result = (session.query(players).
                       filter(players.id_player == id_player).
