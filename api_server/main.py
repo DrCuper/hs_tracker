@@ -111,8 +111,8 @@ async def add_player(name: str, id_player: int):
     ))
 
     result = (session.query(players).
-                      filter(players.id_player = id_player).
-                      filter(players.v_name = name).
+                      filter(players.id_player == id_player).
+                      filter(players.v_name == name).
                       count()
                       )
 
