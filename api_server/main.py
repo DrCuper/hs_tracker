@@ -100,9 +100,28 @@ def update_bg_version_to_actual():
 
 #update_bg_version_to_actual()
 
+@app.get('/add_player')
+asycn def add_player(name: str, id_player: int):
+
+    Session = sessionmaker(engine)
+    session = Session()
+
+    session.add(players(id_player = id_player,
+                        v_name = name
+    ))
+
+    result = (session.query(players).
+                      filter(players.id_player = id_player).
+                      filter(players.v_name = name).
+                      count()
+                      )
+
+    return result
+
 
 @app.get("/all_players")
 async def all_players(id_player: int):
+
     Session = sessionmaker(engine)   
     session = Session()
 
