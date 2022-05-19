@@ -17,9 +17,10 @@ def markup_layout():
     item12 = telebot.types.KeyboardButton("Рейтинги")
     item13 = telebot.types.KeyboardButton("Еженедельная сводка")
     item14 = telebot.types.KeyboardButton("Другое")
+    markup.row(item1, item2, item3, item4, item5, item6, item7, item8)
     markup.row(item9)
     markup.row(item13, item12)
-    markup.row(item2, item11)
+    markup.row(item10, item11)
     markup.row(item14)
     return markup
 
