@@ -76,8 +76,7 @@ class salesmen_row(BaseModel):
 engine = create_engine(URL(**DATABASE))
 Session = sessionmaker(engine)
 
-actual_bg_version = 23.2
-
+actual_bg_version = None
 
 def update_bg_version_to_actual():
 
@@ -98,7 +97,12 @@ def update_bg_version_to_actual():
 
             actual_bg_version = version
 
-#update_bg_version_to_actual()
+update_bg_version_to_actual()
+
+@app.get('/status')
+async def status():
+
+    return 1
 
 @app.get('/add_player')
 async def add_player(name: str, id_player: int):
@@ -164,7 +168,7 @@ async def add_place(data: salesmen_row):
     Session = sessionmaker(engine)
     session = Session()
 
-    #update_bg_version_to_actual()
+    update_bg_version_to_actual()
 
     session.add(salesmen(id_player=data.id_player, 
                          place=data.place, 
@@ -407,6 +411,23 @@ async def total_avg_per_special_version(version: str):
 
     return result
 
+@app.get("/total_games_per_version")
+async def total_games_per_version():
+
+    Session = sessionmaker(engine)
+    session = Session()
+
+    result = ( session.query(players.v_name, salesmen.bg_version, func.count(salesmen.place).label('avg')).
+                       join(players, players.id_player==salesmen.id_player).
+                       filter(salesmen.b_deleted==0).
+                       group_by(players.v_name, salesmen.bg_version).
+                       all()
+                       )
+
+    session.close()
+
+    return result
+
 
 @app.get("/total_period")
 async def total_period(place: int):
@@ -609,3 +630,5 @@ def make_all_ids_normal():
 
         session.commit()
         session.close() 
+
+make_all_ids_normal()

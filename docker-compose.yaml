@@ -1,5 +1,7 @@
 version: "3.3"
+
 services:
+
   postgres:
     image: postgres:latest
     command:
@@ -17,7 +19,7 @@ services:
       - "-c"
       - "random_page_cost=1.1"
       - "-c"
-      - "temp_file_limit=10GB"
+      - "temp_file_limit=5GB"
       - "-c"
       - "log_min_duration_statement=200ms"
       - "-c"
