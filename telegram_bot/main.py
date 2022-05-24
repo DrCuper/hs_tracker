@@ -49,6 +49,10 @@ bad_words_other = [
     f'user в очередной раз включил свой 3D-принтер'
 ]
 
+subscribers_list = [
+    147264600
+]
+
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
@@ -323,7 +327,11 @@ def add_place(message):
                 return 'Something went wrong !'
 
 
-            logger.info(f"{message.from_user.first_name} занял {message.text} место")
+            logger.info(f'{message.from_user.first_name} занял {message.text} место')
+
+            for subscriber in subscribers_list:
+
+                bot.send_message(subscriber, f'{message.from_user.first_name} занял {message.text} место')
 
             if message.text in ('1', '8'):
 
