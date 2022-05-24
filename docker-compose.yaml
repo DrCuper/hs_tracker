@@ -41,7 +41,7 @@ services:
       - .:/var/lib/postgresql/data
     ports:
       - "5434:5432"
-    restart: unless-stopped
+    restart: always
 
   api_server:
     build: ./api_server
@@ -51,6 +51,7 @@ services:
       TZ: Europe/Moscow
     ports:
       - "8765:8765"
+    restart: always
 
   telegram_bot:
     build: ./telegram_bot
@@ -60,4 +61,4 @@ services:
       TZ: Europe/Moscow
     ports:
       - "8443:8443"
-
+    restart: always

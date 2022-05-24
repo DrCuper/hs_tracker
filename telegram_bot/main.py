@@ -710,6 +710,8 @@ context.load_cert_chain(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV)
 
 logger.info("Launched !")
 
+bot.send_message('147264600', f'Запустился в {datetime.datetime.today()}')
+
 web.run_app(
     app,
     host=WEBHOOK_LISTEN,
