@@ -341,7 +341,7 @@ def add_place(message):
 
                     for line in response:
 
-                        bot.send_message(line.get('id_player'), random.choice(bad_words_other).replace('user', line.get('v_name')))
+                        bot.send_message(line.get('id_player'), random.choice(bad_words_other).replace('user', message.chat.id))
 
                     bot.send_message(message.chat.id, random.choice(bad_words_user))
                     
