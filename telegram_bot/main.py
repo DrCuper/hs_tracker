@@ -173,6 +173,10 @@ def commands(message):
 
             th = Thread(target=test(message), daemon=True)
 
+        elif message.text == '/test_stop':
+
+            th.stop() 
+
         else:
 
             bot.send_message(message.chat.id, "Wrong value",
