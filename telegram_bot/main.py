@@ -188,8 +188,6 @@ def commands(message):
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def answer(message):
     try:
-
-        logger.info(message)
             
         if message.text in ('1', '2', '3', '4', '5', '6', '7', '8'):
 
