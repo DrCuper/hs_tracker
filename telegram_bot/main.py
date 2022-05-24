@@ -41,6 +41,14 @@ bad_words_user = [
     'Пошел нахуй'
 ]
 
+bad_words_other = [
+    f'Жаль, что мать user не увидела его победы',                                                
+    f'C таким столом, как у user, можно и без семьи жить',                                                 
+    f'Никто не знал, что у user в даркнете есть карта постоянного клиента на продажу родственников',
+    f'Зато user может не думать о подарках родственникам',                             
+    f'user в очередной раз включил свой 3D-принтер'
+]
+
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
@@ -325,15 +333,7 @@ def add_place(message):
 
                     for line in response:
 
-                        bad_words_other = [
-                            f'Жаль, что мать {message.from_user.first_name} не увидела его победы',                                                
-                            f'C таким столом, как у {message.from_user.first_name}, можно и без семьи жить',                                                 
-                            f'Никто не знал, что у {message.from_user.first_name} в даркнете есть карта постоянного клиента на продажу родственников',
-                            f'Зато {message.from_user.first_name} может не думать о подарках родственникам',                             
-                            f'{message.from_user.first_name} в очередной раз включил свой 3D-принтер'
-                        ]
-
-                        bot.send_message(line.get('id_player'), random.choice(bad_words_other))
+                        bot.send_message(line.get('id_player'), random.choice(bad_words_other).replace('user', line.get('v_name')))
 
                     bot.send_message(message.chat.id, random.choice(bad_words_user))
                     
